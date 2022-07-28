@@ -3,8 +3,8 @@ import React from "react";
 
 const Greeter = name => name + "Is Watching You";
 
-const ShowList = prop =>
-    prop.showList.map(({objectID, ...item}) => (
+const ShowList = ({showList}) =>
+    showList.map(({objectID, ...item}) => (
         <Item
             key={objectID}
             {...item}
@@ -56,7 +56,7 @@ const App = () => {
             num_comments: 2,
             points: 5,
             objectID: 1,
-        },
+        }
     ];
 
     const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
