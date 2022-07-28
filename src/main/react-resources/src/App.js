@@ -21,14 +21,13 @@ const Item = ({url, title, author, num_comments, points}) =>
         <span> {points}</span>
     </div>
 
-
-const Search = ({search, onSearch}) =>
+const InputWithLabel = ({id, label, type="text", value, onInputChange}) =>
     <>
-        <label htmlFor={"Search"}> search </label>
-        <input id={"Search"} type={"text"} value={search} onChange={onSearch}/>
-        <hr/>
+        <label htmlFor={id}> {label} </label>
+        <input id={id} type={type} value={value} onChange={onInputChange}/>
     </>
 
+//Personal Hook
 const useSemiPersistentState = (key, initialState) => {
     const [value, setValue] = React.useState(localStorage.getItem(key) || initialState);
 
@@ -73,7 +72,7 @@ const App = () => {
         <div className="App">
             <h1> {Greeter("Konstantine")}</h1>
 
-            <Search search={searchTerm} onSearch={handleSearch}/>
+            <InputWithLabel id="search" label="Search" value={searchTerm} onInputChange={handleSearch}/>
 
             < ShowList showList={searchedStories}/> <br/>
         </div>
