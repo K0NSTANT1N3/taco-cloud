@@ -3,29 +3,76 @@ import React from "react";
 
 const Greeter = name => name + "Is Watching You";
 
-const ShowList = ({showList}) =>
-    showList.map(({objectID, ...item}) => (
+const ShowList = ({showList, onRemoveItem}) =>
+    showList.map(item => (
         <Item
-            key={objectID}
-            {...item}
+            key={item.objectID}
+            item={item}
+            onRemoveItem={onRemoveItem}
         />
     ));
 
-const Item = ({url, title, author, num_comments, points}) =>
+const Item = ({item, onRemoveItem}) =>
     <div>
         <span>
-            <a href={url}>{title}</a>
+            <a href={item.url}>{item.title}</a>
         </span>
-        <span> {author}</span>
-        <span> {num_comments}</span>
-        <span> {points}</span>
+        <span> {item.author}</span>
+        <span> {item.num_comments}</span>
+        <span> {item.points}</span>
+        <span>
+            <button type="button" onClick={() => onRemoveItem(item)}>
+                Dismiss
+            </button>
+        </span>
     </div>
 
-const InputWithLabel = ({id, label, type="text", value, onInputChange}) =>
-    <>
-        <label htmlFor={id}> {label} </label>
-        <input id={id} type={type} value={value} onChange={onInputChange}/>
-    </>
+const InputWithLabel = ({id, value, type = "text", onInputChange, isFocused, children}) => {
+    //A
+    const inputRef = React.useRef();
+
+    //C
+    React.useEffect(() => {
+        if (isFocused && inputRef.current) {
+            //D
+            inputRef.current.focus();
+        }
+    }, [isFocused]);
+
+    return (
+        <>
+            <label htmlFor={id}> {children} </label>
+            &nbsp;
+            <input ref={inputRef} id={id} type={type} value={value} onChange={onInputChange}/>
+        </>
+    )
+}
+
+const initialStories = [
+    {
+        title: 'React',
+        url: 'https://reactjs.org/',
+        author: 'Jordan Walke',
+        num_comments: 3,
+        points: 4,
+        objectID: 0,
+    },
+    {
+        title: 'Redux',
+        url: 'https://redux.js.org/',
+        author: 'Dan Abramov, Andrew Clark',
+        num_comments: 2,
+        points: 5,
+        objectID: 1,
+    }
+];
+
+const getAsyncStories = () => new Promise((resolve, reject) =>
+    setTimeout(
+        () => resolve({data: {stories: initialStories}}),
+        2000
+    )
+)
 
 //Personal Hook
 const useSemiPersistentState = (key, initialState) => {
@@ -38,33 +85,67 @@ const useSemiPersistentState = (key, initialState) => {
     return [value, setValue];
 };
 
+const storiesReducer = (state, action) => {
+    switch (action.type) {
+        case 'STORIES_FETCH_INIT':
+            return {
+                ...state,
+                isLoading: true,
+                isError: false,
+            };
+        case 'STORIES_FETCH_SUCCESS':
+            return {
+                ...state,
+                isLoading: false,
+                isError: false,
+                data: action.payload,
+            };
+        case 'STORIES_FETCH_FAILURE':
+            return{
+                ...state,
+                isLoading: false,
+                isError: true,
+            }
+        case 'REMOVE_STORY':
+            return {
+                ...state,
+                data: state.data.filter(story => action.payload.objectID !== story.objectID),
+            };
+        default:
+            throw new Error();
+    }
+}
+
 const App = () => {
-    const stories = [
-        {
-            title: 'React',
-            url: 'https://reactjs.org/',
-            author: 'Jordan Walke',
-            num_comments: 3,
-            points: 4,
-            objectID: 0,
-        },
-        {
-            title: 'Redux',
-            url: 'https://redux.js.org/',
-            author: 'Dan Abramov, Andrew Clark',
-            num_comments: 2,
-            points: 5,
-            objectID: 1,
-        }
-    ];
-
     const [searchTerm, setSearchTerm] = useSemiPersistentState("search", "React");
+    const [stories, dispatchStories] = React.useReducer(
+        storiesReducer, {data: [], isLoading: false, isError: false}
+    );
 
-    const handleSearch = event => {
-        setSearchTerm(event.target.value);
-    };
+    React.useEffect(() => {
+        dispatchStories({type: 'STORIES_FETCH_INIT'});
 
-    const searchedStories = stories.filter(story =>
+        getAsyncStories()
+            .then(result => {
+                dispatchStories({
+                    type: 'STORIES_FETCH_SUCCESS',
+                    payload: result.data.stories
+                });
+            })
+            .catch(() => dispatchStories({type: 'STORIES_FETCH_FAILURE'}));
+    }, []);
+
+    const handleRemoveStory = item => {
+        dispatchStories({
+            type: 'REMOVE_STORY',
+            payload: item
+        })
+    }
+
+    const handleSearch = event => setSearchTerm(event.target.value);
+
+
+    const searchedStories = stories.data.filter(story =>
         story.title.toLocaleLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -72,9 +153,22 @@ const App = () => {
         <div className="App">
             <h1> {Greeter("Konstantine")}</h1>
 
-            <InputWithLabel id="search" label="Search" value={searchTerm} onInputChange={handleSearch}/>
+            <InputWithLabel id="search" value={searchTerm} isFocused onInputChange={handleSearch}>
+                <strong> Search:</strong>
+            </InputWithLabel>
 
-            < ShowList showList={searchedStories}/> <br/>
+            <>
+                {stories.isError && <p>Something went wrong...</p>}
+
+                {stories.isLoading ? (
+                    <p>Loading...</p>
+                ) : (
+                    < ShowList
+                        showList={searchedStories}
+                        onRemoveItem={handleRemoveStory}
+                    />
+                )}
+            </>
         </div>
     );
 }
