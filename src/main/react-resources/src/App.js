@@ -128,7 +128,7 @@ const App = () => {
 
     const handleSearchInput = event => setSearchTerm(event.target.value);
 
-    const handleSearchSubmit = event => setUrl(`${API_ENDPOINT}${searchTerm}`);
+    const handleSearchSubmit = () => setUrl(`${API_ENDPOINT}${searchTerm}`);
 
     return (
         <div className="App">
