@@ -1,5 +1,6 @@
 import './App.css';
 import React from "react";
+import axios from "axios";
 
 const Greeter = name => name + "Is Watching You";
 
@@ -104,12 +105,12 @@ const App = () => {
 
         dispatchStories({type: 'STORIES_FETCH_INIT'});
 
-        fetch(url)//B
-            .then(response => response.json())//C
+        axios
+            .get(url)
             .then(result => {
                 dispatchStories({
                     type: 'STORIES_FETCH_SUCCESS',
-                    payload: result.hits //D
+                    payload: result.data.hits,
                 });
             })
             .catch(() => dispatchStories({type: 'STORIES_FETCH_FAILURE'}));
