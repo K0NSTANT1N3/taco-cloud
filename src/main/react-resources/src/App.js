@@ -1,55 +1,13 @@
 import './App.css';
 import React from "react";
 import axios from "axios";
+
 import List from "./List";
 import SearchForm from "./SearchForm";
 
-const Greeter = name => name + " Is Watching You";
+const Greeter = name => name + "Is Watching You";
 
-const ShowList = ({showList, onRemoveItem}) =>
-    showList.map(item => (
-        <Item
-            key={item.objectID}
-            item={item}
-            onRemoveItem={onRemoveItem}
-        />
-    ));
 
-const Item = ({item, onRemoveItem}) =>
-    <div>
-        <span>
-            <a href={item.url}>{item.title}</a>
-        </span>
-        <span> {item.author}</span>
-        <span> {item.num_comments}</span>
-        <span> {item.points}</span>
-        <span>
-            <button type="button" onClick={() => onRemoveItem(item)}>
-                Dismiss
-            </button>
-        </span>
-    </div>
-
-const InputWithLabel = ({id, value, type = "text", onInputChange, isFocused, children}) => {
-    //A
-    const inputRef = React.useRef();
-
-    //C
-    React.useEffect(() => {
-        if (isFocused && inputRef.current) {
-            //D
-            inputRef.current.focus();
-        }
-    }, [isFocused]);
-
-    return (
-        <>
-            <label htmlFor={id}> {children} </label>
-            &nbsp;
-            <input ref={inputRef} id={id} type={type} value={value} onChange={onInputChange}/>
-        </>
-    )
-}
 //A
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
@@ -133,21 +91,21 @@ const App = () => {
 
     const handleSearchInput = event => setSearchTerm(event.target.value);
 
-    const handleSearchSubmit = () => setUrl(`${API_ENDPOINT}${searchTerm}`);
+    const handleSearchSubmit = event => {
+        setUrl(`${API_ENDPOINT}${searchTerm}`);
+
+        event.preventDefault();
+    };
 
     return (
         <div className="App">
             <h1> {Greeter("Konstantine")}</h1>
 
-            <>
-                <InputWithLabel id="search" value={searchTerm} isFocused onInputChange={handleSearchInput}>
-                    <strong> Search:</strong>
-                </InputWithLabel>
-
-                <button type="button" disabled={!searchTerm} onClick={handleSearchSubmit}>
-                    <strong> Submit </strong>
-                </button>
-            </>
+            <SearchForm
+                searchTerm={searchTerm}
+                onSearchInput={handleSearchInput}
+                onSearchSubmit={handleSearchSubmit}
+            />
 
             <>
                 {stories.isError && <p>Something went wrong...</p>}
@@ -165,3 +123,4 @@ const App = () => {
     );
 }
 export default App;
+
