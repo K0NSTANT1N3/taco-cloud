@@ -7,7 +7,6 @@ import SearchForm from "./SearchForm";
 
 const Greeter = name => name + "Is Watching You";
 
-
 //A
 const API_ENDPOINT = 'https://hn.algolia.com/api/v1/search?query=';
 
@@ -61,22 +60,19 @@ const App = () => {
     );
 
     const handleFetchStories = React.useCallback(async () => {
-        if (!searchTerm) return;
+        dispatchStories({ type: 'STORIES_FETCH_INIT' });
 
-        dispatchStories({type: 'STORIES_FETCH_INIT'});
-
-        try{
+        try {
             const result = await axios.get(url);
 
             dispatchStories({
                 type: 'STORIES_FETCH_SUCCESS',
                 payload: result.data.hits,
             });
-        }catch {
-            dispatchStories({type: 'STORIES_FETCH_FAILURE'});
+        } catch {
+            dispatchStories({ type: 'STORIES_FETCH_FAILURE' });
         }
-
-    }, [url])
+    }, [url]);
 
     React.useEffect(() => {
         handleFetchStories();
@@ -85,11 +81,13 @@ const App = () => {
     const handleRemoveStory = item => {
         dispatchStories({
             type: 'REMOVE_STORY',
-            payload: item
-        })
-    }
+            payload: item,
+        });
+    };
 
-    const handleSearchInput = event => setSearchTerm(event.target.value);
+    const handleSearchInput = event => {
+        setSearchTerm(event.target.value);
+    };
 
     const handleSearchSubmit = event => {
         setUrl(`${API_ENDPOINT}${searchTerm}`);
